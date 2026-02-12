@@ -3,6 +3,7 @@
 from operator import index
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal
+from textual.getters import query_one
 from textual.widgets import Footer, Header, Static, ListView, ListItem
 from main import SessionManager
 
@@ -15,11 +16,7 @@ class ScheduleApp(App):
         yield Header()
         yield Horizontal(
             ListView(id = "session_list"),
-            Static("Title: ", id="title"),
-            Static("Start Time: ", id="start_time"),
-            Static("End Time: ", id="end_time"),
-            Static("Total Time: ", id="total_time"),
-            Static("Description: ", id="desc")
+            Static("Title: \nStart Time: \nEnd Time: \nTotal Duration: \nDescription: ", id="details"),
         )
         yield Footer()
 
@@ -40,9 +37,28 @@ class ScheduleApp(App):
 
     def on_list_view_selected(self, event):
         title_print = self.manager.session_data[event.index]["title"]
-        self.query_one("#title").update(f"Title: {title_print}")
+        startT_print = self.manager.session_data[event.index]["start_time"]
+        endT_print = self.manager.session_data[event.index]["end_time"]
+        durationT_print = self.manager.from_dict(self.manager.session_data[event.index]).total_time
+        desc_print = self.manager.session_data[event.index]["description"]
 
+        self.query_one("#details").update(f"Title: {title_print}\nStart Time: {startT_print}\nEnd Time: {endT_print}\nTotal Duration: {durationT_print}\nDescription: {desc_print}")
+
+
+    CSS = """
+    #session_list {
+        width: 1fr;
+    }
+
+    #details {
+        width: 2fr;
+        padding: 1 2;
+    }
+    """
 
 if __name__ == "__main__":
     app = ScheduleApp()
     app.run()
+
+
+

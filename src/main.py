@@ -35,6 +35,9 @@ class SessionManager:
     def add(self, obj):
         self.session_data.append(obj.to_dict)
 
+    def from_dict(self, dictionary):
+        sessionOBJ = Session(dictionary.get("start_time"), dictionary.get("end_time"), dictionary.get("title"), dictionary.get("description"))
+        return sessionOBJ
 
 
 
@@ -60,9 +63,6 @@ class Session:
          return dict
         
 
-def from_dict(dictionary):
-    sessionOBJ = Session(dictionary.get("start_time"), dictionary.get("end_time"), dictionary.get("title"), dictionary.get("description"))
-    return sessionOBJ
 
 def main():
     topic = input("topic: ")
