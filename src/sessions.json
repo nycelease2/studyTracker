@@ -1,0 +1,26 @@
+[
+    {
+        "title": "Math",
+        "description": "Integration practice",
+        "start_time": "2026-02-12T16:30:00",
+        "end_time": "2026-02-12T18:00:00"
+    },
+    {
+        "title": "Physics",
+        "description": "Thermodynamics revision",
+        "start_time": "2026-02-13T05:45:00",
+        "end_time": "2026-02-13T07:00:00"
+    },
+    {
+        "title": "python",
+        "description": "study tracker",
+        "start_time": "2026-02-12T14:35:00",
+        "end_time": "2026-02-12T16:00:00"
+    },
+    {
+        "title": "python",
+        "description": "study tracker",
+        "start_time": "2026-02-13T14:36:00",
+        "end_time": "2026-02-13T16:00:00"
+    }
+]
