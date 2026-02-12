@@ -10,6 +10,7 @@ f1 = "%Y-%m-%dT%H:%M:%S"
 class SessionManager:
     def __init__(self, data_file):
         self.data_file = Path(data_file)
+        self.session_data = []
 
     def load(self):
 
@@ -24,8 +25,6 @@ class SessionManager:
         self.session_data = json.load(session_data_file)
         session_data_file.close()
 
-        return self.session_data
-
     def save(self):
         session_data_file = open(self.data_file, "w")
         json.dump(self.session_data, session_data_file, indent=4)
@@ -33,7 +32,7 @@ class SessionManager:
 
 
     def add(self, obj):
-        self.session_data.append(obj.to_dict)
+        self.session_data.append(obj.to_dict())
 
     def from_dict(self, dictionary):
         sessionOBJ = Session(dictionary.get("start_time"), dictionary.get("end_time"), dictionary.get("title"), dictionary.get("description"))
@@ -73,7 +72,9 @@ def main():
     sessionOBJ = Session(start_time, end_time, topic, desc)
 
     manager = SessionManager("sessions.json")
+    manager.load()
     manager.add(sessionOBJ)
+    manager.save()
 
 if __name__=="__main__":
    main()
