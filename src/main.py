@@ -34,6 +34,9 @@ class SessionManager:
     def add(self, obj):
         self.session_data.append(obj.to_dict())
 
+    def delete(self, index):
+        self.session_data.pop(index)
+
     def from_dict(self, dictionary):
         sessionOBJ = Session(dictionary.get("start_time"), dictionary.get("end_time"), dictionary.get("title"), dictionary.get("description"))
         return sessionOBJ

@@ -1,6 +1,6 @@
 #!/bin/python
 
-from textual import on
+from textual import on, log
 from operator import index
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
@@ -23,29 +23,44 @@ class ScheduleApp(App):
         yield Footer()
 
     BINDINGS = [("a", "add_session", "Add Session"), 
-                ("d", "delete_session", "Delete Session")]
+                ("d", "delete_session", "Delete Session"),
+                ("r", "refresh", "Refresh"),
+                ("e", "edit", "Edit Session")]
+
+    def action_edit(self):
+        list_view = self.query_one("#session_list")
+        if list_view.index is None:
+            log.info("none selected")
+            return
+
+        self.push_screen(EditSession(list_view.index))
 
     async def action_delete_session(self):
         list_view = self.query_one("#session_list")
         if list_view.index is None:
+            log.info("none selected")
             return
 
-        result = await self.push_screen(ConfirmDeletion(list_view.index))
+        def check_result(result):
+            if result == "yes":
+                # Use the index captured when the action was first triggered
+                self.manager.delete(list_view.index)
+                self.manager.save()
+                self.refreshScreen()
 
-        if result == "yes":
-            del self.manager.session_data[list_view.index]
-            self.manager.save()
-            self.refreshScreen()
-
+        self.push_screen(ConfirmDeletion(), check_result)
 
     def action_add_session(self):
         self.push_screen(AddSessionScreen())
 
+    def action_refresh(self):
+        self.refreshScreen()
 
     def refreshScreen(self):
         list_view = self.query_one("#session_list")
         list_view.clear()
 
+        self.manager.load()
         for session_dict in self.manager.session_data:
             list_view.append(ListItem(Static(session_dict["title"])))
 
@@ -53,7 +68,6 @@ class ScheduleApp(App):
     def on_mount(self):
         self.manager = SessionManager("sessions.json")
         self.manager.load()
-        self.count = len(self.manager.session_data)
 
         list_view = self.query_one("#session_list")
 
@@ -84,42 +98,23 @@ class ScheduleApp(App):
     """
 
 class ConfirmDeletion(ModalScreen):
-    def __init__(self, session_index):
+    def __init__(self):
         super().__init__()
-        self.choice = None
-        self.session_index = session_index
 
     def compose(self):
 
         yield Vertical(
                 Static("Are you sure you want to delete this session?\n"),
-                ListView(ListItem(Static("[Yes]")), ListItem(Static("[No]")), id="options"), id = "dialog_container"
-                )
+                ListView(ListItem(Static("Yes")), ListItem(Static("No")), id="options"), id = "dialog_container"
+            )
 
-        
-
-
-    def on_list_view_selected(self, event):
+    async def on_list_view_selected(self, event):
         if event.index == 0:
-            self.choice = "yes"
+            log.debug("deleting")
+            self.dismiss("yes")
         else:
-            self.choice = "no"
+            self.dismiss("no")
 
-        self.dismiss(self.choice)
-
-    CSS = """
-
-        #dialog_container {
-    width: 40%;       /* small box */
-    height: auto;     
-    align: center middle; /* center in terminal */
-    border: round yellow;
-    padding: 1 2;
-    background: #222; /* optional dark background */
-}
-
-
-    """
 
 class AddSessionScreen(Screen):
     def compose(self):
@@ -142,16 +137,68 @@ class AddSessionScreen(Screen):
         end = self.query_one("#end", Input).value
         desc = self.query_one("#desc", Input).value
         
-        self.newSession = Session(start, end, title, desc)
+        try:
+            self.newSession = Session(start, end, title, desc)
+            self.app.manager.add(self.newSession)
+        except:
+            log.error("something was wrong")
 
-        self.app.manager.add(self.newSession)
         self.app.manager.save()
         self.app.refreshScreen()
         self.app.pop_screen()
 
+class EditSession(Screen):
+    def __init__(self, index):
+        super().__init__()
+        self.index = index
+        # We don't touch self.app here!
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        yield Label("Editing Session", id="title_label")
+        yield Vertical(
+            # Using 'value' instead of 'placeholder' so the text is editable
+            Input(id="edit_title"),
+            Input(id="edit_start"),
+            Input(id="edit_end"),
+            Input(id="edit_desc"),
+            Button("Save", variant="success", id="save_btn"),
+            id="edit_form"
+        )
+        yield Footer()
+
+    def on_mount(self):
+        """Now that the screen is mounted, we can safely access self.app."""
+        session = self.app.manager.session_data[self.index]
+        
+        # Populate the inputs with existing data
+        self.query_one("#edit_title").value = session["title"]
+        self.query_one("#edit_start").value = session["start_time"]
+        self.query_one("#edit_end").value = session["end_time"]
+        self.query_one("#edit_desc").value = session["description"]
+
+    @on(Input.Submitted)
+    @on(Button.Pressed)
+    def save(self, event: Button.Pressed):
+            # 1. Grab the new values
+            new_data = {
+                "title": self.query_one("#edit_title").value,
+                "start_time": self.query_one("#edit_start").value,
+                "end_time": self.query_one("#edit_end").value,
+                "description": self.query_one("#edit_desc").value,
+            }
+            
+            # 2. Update your manager (assuming you have an update method)
+            self.app.manager.session_data[self.index].update(new_data)
+            self.app.manager.save()
+            
+            # 3. Return to main screen and refresh
+            self.app.pop_screen()
+            self.app.refreshScreen()
+
+
 if __name__ == "__main__":
     app = ScheduleApp()
     app.run()
-
 
 
