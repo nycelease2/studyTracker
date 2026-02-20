@@ -30,7 +30,6 @@ class SessionManager:
         json.dump(self.session_data, session_data_file, indent=4)
         session_data_file.close()
 
-
     def add(self, obj):
         self.session_data.append(obj.to_dict())
 
@@ -38,9 +37,13 @@ class SessionManager:
         self.session_data.pop(index)
 
     def from_dict(self, dictionary):
-        sessionOBJ = Session(dictionary.get("start_time"), dictionary.get("end_time"), dictionary.get("title"), dictionary.get("description"))
+        sessionOBJ = Session(
+            dictionary.get("start_time"),
+            dictionary.get("end_time"),
+            dictionary.get("title"),
+            dictionary.get("description"),
+        )
         return sessionOBJ
-
 
 
 class Session:
@@ -54,16 +57,14 @@ class Session:
         self.desc = desc
 
     def to_dict(self):
-         dict = {
-                    "title": self.topic,
-                    "description": self.desc,
-                    "start_time": self.start_datetime.isoformat(),
-                    "end_time": self.end_datetime.isoformat()
+        dict = {
+            "title": self.topic,
+            "description": self.desc,
+            "start_time": self.start_datetime.isoformat(),
+            "end_time": self.end_datetime.isoformat(),
+        }
 
-                 }
-        
-         return dict
-        
+        return dict
 
 
 def main():
@@ -79,5 +80,6 @@ def main():
     manager.add(sessionOBJ)
     manager.save()
 
-if __name__=="__main__":
-   main()
+
+if __name__ == "__main__":
+    main()
